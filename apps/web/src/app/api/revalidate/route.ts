@@ -1,7 +1,7 @@
 import { Logger } from "@workspace/logger";
 import { revalidateTag } from "next/cache";
-import { parseBody } from "next-sanity/webhook";
 import { type NextRequest, NextResponse } from "next/server";
+import { parseBody } from "next-sanity/webhook";
 
 const logger = new Logger("Revalidate");
 
@@ -19,7 +19,7 @@ const TYPE_NAMESPACE: Record<string, string> = {
 export async function POST(request: NextRequest) {
   const { isValidSignature, body } = await parseBody(
     request,
-    process.env.SANITY_WEBHOOK_SECRET,
+    process.env.SANITY_WEBHOOK_SECRET
   );
 
   if (!isValidSignature) {
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
   }
 
   for (const tag of tags) {
-    revalidateTag(tag);
+    revalidateTag(tag, "max");
   }
 
   logger.info(`${reason} | tags=${JSON.stringify(tags)}`);
