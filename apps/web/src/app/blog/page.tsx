@@ -6,6 +6,8 @@ import {
 import { draftMode } from "next/headers";
 import { notFound } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 import { BlogHeader } from "@/components/blog-card";
 import { BlogPageContent } from "@/components/blog-page-content";
 import { PageBuilder } from "@/components/pagebuilder";
