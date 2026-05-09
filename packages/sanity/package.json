@@ -27,7 +27,6 @@
   "exports": {
     "./client": "./src/client.ts",
     "./query": "./src/query.ts",
-    "./live": "./src/live.ts",
     "./image": "./src/image.ts",
     "./types": "./src/sanity.types.ts"
   }

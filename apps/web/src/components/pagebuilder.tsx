@@ -1,6 +1,5 @@
 "use client";
 
-import { useOptimistic } from "@sanity/visual-editing/react";
 import { env } from "@workspace/env/client";
 import { createDataAttribute } from "next-sanity";
 import { useCallback, useMemo } from "react";
@@ -80,25 +79,6 @@ function UnknownBlockError({
 }
 
 /**
- * Hook to handle optimistic updates for page builder blocks
- */
-function useOptimisticPageBuilder(
-  initialBlocks: PageBuilderBlock[],
-  documentId: string
-) {
-  // biome-ignore lint/suspicious/noExplicitAny: <any is used to allow for dynamic component rendering>
-  return useOptimistic<PageBuilderBlock[], any>(
-    initialBlocks,
-    (currentBlocks, action) => {
-      if (action.id === documentId && action.document?.pageBuilder) {
-        return action.document.pageBuilder;
-      }
-      return currentBlocks;
-    }
-  );
-}
-
-/**
  * Custom hook for block component rendering logic
  */
 function useBlockRenderer(id: string, type: string) {
@@ -151,7 +131,6 @@ export function PageBuilder({
   id,
   type,
 }: PageBuilderProps) {
-  const blocks = useOptimisticPageBuilder(initialBlocks, id);
   const { renderBlock } = useBlockRenderer(id, type);
 
   const containerDataAttribute = useMemo(
@@ -159,7 +138,7 @@ export function PageBuilder({
     [id, type]
   );
 
-  if (!blocks.length) {
+  if (!initialBlocks.length) {
     return null;
   }
 
@@ -168,7 +147,7 @@ export function PageBuilder({
       className="mx-auto my-16 flex max-w-7xl flex-col gap-16"
       data-sanity={containerDataAttribute}
     >
-      {blocks.map(renderBlock)}
+      {initialBlocks.map(renderBlock)}
     </main>
   );
 }

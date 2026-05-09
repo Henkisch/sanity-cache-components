@@ -1,18 +1,23 @@
 import { Logger } from "@workspace/logger";
 import { client } from "@workspace/sanity/client";
-import { sanityFetch } from "@workspace/sanity/live";
 import { querySlugPageData, querySlugPagePaths } from "@workspace/sanity/query";
+import { draftMode } from "next/headers";
 import { notFound } from "next/navigation";
 
 import { PageBuilder } from "@/components/pagebuilder";
+import { sanityFetch, sanityFetchPreview } from "@/lib/sanity/fetch";
 import { getSEOMetadata } from "@/lib/seo";
 
 const logger = new Logger("PageSlug");
 
-async function fetchSlugPageData(slug: string) {
-  return await sanityFetch({
+async function fetchSlugPageData(slug: string, isDraftMode: boolean) {
+  if (isDraftMode) {
+    return sanityFetchPreview({ query: querySlugPageData, params: { slug } });
+  }
+  return sanityFetch({
     query: querySlugPageData,
     params: { slug },
+    tags: ["page"],
   });
 }
 
@@ -20,7 +25,6 @@ async function fetchSlugPagePaths() {
   try {
     const slugs = await client.fetch(querySlugPagePaths);
 
-    // If no slugs found, return empty array to prevent build errors
     if (!Array.isArray(slugs) || slugs.length === 0) {
       return [];
     }
@@ -36,7 +40,6 @@ async function fetchSlugPagePaths() {
     return paths;
   } catch (error) {
     logger.error("Error fetching slug paths", error);
-    // Return empty array to allow build to continue
     return [];
   }
 }
@@ -48,7 +51,8 @@ export async function generateMetadata({
 }) {
   const { slug } = await params;
   const slugString = `/${slug.join("/")}`;
-  const { data: pageData } = await fetchSlugPageData(slugString);
+  const { isEnabled: isDraftMode } = await draftMode();
+  const pageData = await fetchSlugPageData(slugString, isDraftMode);
 
   return getSEOMetadata({
     title: pageData?.title ?? pageData?.seoTitle,
@@ -64,9 +68,6 @@ export async function generateStaticParams() {
   return paths;
 }
 
-// Allow dynamic params for paths not generated at build time
-export const dynamicParams = true;
-
 export default async function SlugPage({
   params,
 }: {
@@ -74,13 +75,14 @@ export default async function SlugPage({
 }) {
   const { slug } = await params;
   const slugString = `/${slug.join("/")}`;
-  const { data: pageData } = await fetchSlugPageData(slugString);
+  const { isEnabled: isDraftMode } = await draftMode();
+  const pageData = await fetchSlugPageData(slugString, isDraftMode);
 
   if (!pageData) {
     return notFound();
   }
 
-  const { title, pageBuilder, _id, _type } = pageData ?? {};
+  const { title, pageBuilder, _id, _type } = pageData;
 
   return !Array.isArray(pageBuilder) || pageBuilder?.length === 0 ? (
     <div className="flex min-h-[50vh] flex-col items-center justify-center p-4 text-center">

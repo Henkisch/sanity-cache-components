@@ -36,6 +36,7 @@ const customLinkFragment = /* groq */ `
       type == "external" => external,
       "#"
     ),
+    internal,
   }
 `;
 
@@ -93,6 +94,7 @@ const buttonsFragment = /* groq */ `
       url.type == "external" => url.external,
       url.href
     ),
+    "internal": url.internal,
   }
 `;
 
@@ -341,6 +343,7 @@ export const queryFooterData = defineQuery(`
           url.type == "external" => url.external,
           url.href
         ),
+        "internal": url.internal,
       }
     }
   }
@@ -364,7 +367,8 @@ export const queryNavbarData = defineQuery(`
             url.type == "internal" => url.internal->slug.current,
             url.type == "external" => url.external,
             url.href
-          )
+          ),
+          "internal": url.internal,
         }
       },
       _type == "navbarLink" => {
@@ -376,7 +380,8 @@ export const queryNavbarData = defineQuery(`
           url.type == "internal" => url.internal->slug.current,
           url.type == "external" => url.external,
           url.href
-        )
+        ),
+        "internal": url.internal,
       }
     },
     ${buttonsFragment},

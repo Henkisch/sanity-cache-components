@@ -20,8 +20,8 @@ export function Logo({
   src,
   alt = "logo",
   image,
-  width = 170,
-  height = 40,
+  width = 48,
+  height = 48,
   priority = true,
 }: LogoProps) {
   return (
@@ -29,7 +29,7 @@ export function Logo({
       {image ? (
         <SanityImage
           alt={alt ?? "logo"}
-          className="w-[170px] dark:invert"
+          className="w-10!"
           // width={width}
           // height={height}
           decoding="sync"
@@ -39,7 +39,7 @@ export function Logo({
       ) : (
         <Image
           alt={alt ?? "logo"}
-          className="h-[40px] w-[170px] dark:invert"
+          className="w-10!"
           decoding="sync"
           height={height}
           loading="eager"

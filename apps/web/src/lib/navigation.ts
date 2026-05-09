@@ -1,14 +1,25 @@
-import { sanityFetch } from "@workspace/sanity/live";
+import { client } from "@workspace/sanity/client";
 import {
   queryGlobalSeoSettings,
   queryNavbarData,
 } from "@workspace/sanity/query";
+import { cacheLife, cacheTag } from "next/cache";
+
+import { extractRefs } from "./sanity/extract-refs";
 
 export const getNavigationData = async () => {
+  "use cache";
+  cacheLife("max");
+
   const [navbarData, settingsData] = await Promise.all([
-    sanityFetch({ query: queryNavbarData }),
-    sanityFetch({ query: queryGlobalSeoSettings }),
+    client.fetch(queryNavbarData),
+    client.fetch(queryGlobalSeoSettings),
   ]);
 
-  return { navbarData: navbarData.data, settingsData: settingsData.data };
+  cacheTag("navbar", "settings");
+
+  const refs = [...extractRefs([navbarData, settingsData])];
+  if (refs.length) cacheTag(...refs);
+
+  return { navbarData, settingsData };
 };

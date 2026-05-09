@@ -1,14 +1,15 @@
-import { sanityFetch } from "@workspace/sanity/live";
 import {
   queryBlogIndexPageBlogs,
   queryBlogIndexPageBlogsCount,
   queryBlogIndexPageData,
 } from "@workspace/sanity/query";
+import { draftMode } from "next/headers";
 import { notFound } from "next/navigation";
 
 import { BlogHeader } from "@/components/blog-card";
 import { BlogPageContent } from "@/components/blog-page-content";
 import { PageBuilder } from "@/components/pagebuilder";
+import { sanityFetch, sanityFetchPreview } from "@/lib/sanity/fetch";
 import { getSEOMetadata } from "@/lib/seo";
 import {
   calculatePaginationMetadata,
@@ -16,30 +17,44 @@ import {
   handleErrors,
 } from "@/utils";
 
-async function fetchBlogIndexPageData() {
-  const res = await sanityFetch({ query: queryBlogIndexPageData });
-  return res.data;
+async function fetchBlogIndexPageData(isDraftMode: boolean) {
+  if (isDraftMode) {
+    return sanityFetchPreview({ query: queryBlogIndexPageData });
+  }
+  return sanityFetch({ query: queryBlogIndexPageData, tags: ["blogIndex"] });
 }
 
-async function fetchBlogIndexPageBlogs(start: number, end: number) {
-  const res = await sanityFetch({
+async function fetchBlogIndexPageBlogs(
+  start: number,
+  end: number,
+  isDraftMode: boolean,
+) {
+  if (isDraftMode) {
+    return sanityFetchPreview({
+      query: queryBlogIndexPageBlogs,
+      params: { start, end },
+    });
+  }
+  return sanityFetch({
     query: queryBlogIndexPageBlogs,
     params: { start, end },
+    tags: ["blog"],
   });
-  return res.data;
 }
 
-async function fetchBlogIndexPageBlogsCount() {
-  const res = await sanityFetch({
+async function fetchBlogIndexPageBlogsCount(isDraftMode: boolean) {
+  if (isDraftMode) {
+    return sanityFetchPreview({ query: queryBlogIndexPageBlogsCount });
+  }
+  return sanityFetch({
     query: queryBlogIndexPageBlogsCount,
+    tags: ["blog"],
   });
-  return res.data;
 }
 
 export async function generateMetadata() {
-  const { data: result } = await sanityFetch({
-    query: queryBlogIndexPageData,
-  });
+  const { isEnabled: isDraftMode } = await draftMode();
+  const result = await fetchBlogIndexPageData(isDraftMode);
   return getSEOMetadata({
     title: result?.title ?? result?.seoTitle,
     description: result?.description ?? result?.seoDescription,
@@ -58,12 +73,12 @@ type BlogPageProps = {
 export default async function BlogIndexPage({ searchParams }: BlogPageProps) {
   const { page } = await searchParams;
   const currentPage = page ? Number(page) : 1;
+  const { isEnabled: isDraftMode } = await draftMode();
 
-  // Fetch page data and total count in parallel
   const [[indexPageData, errIndexPageData], [totalCount, errTotalCount]] =
     await Promise.all([
-      handleErrors(fetchBlogIndexPageData()),
-      handleErrors(fetchBlogIndexPageBlogsCount()),
+      handleErrors(fetchBlogIndexPageData(isDraftMode)),
+      handleErrors(fetchBlogIndexPageBlogsCount(isDraftMode)),
     ]);
 
   if (errIndexPageData || !indexPageData) {
@@ -99,7 +114,7 @@ export default async function BlogIndexPage({ searchParams }: BlogPageProps) {
 
   const paginationMetadata = calculatePaginationMetadata(
     totalCount,
-    currentPage
+    currentPage,
   );
 
   const { start, end } = getBlogPaginationStartEnd(currentPage);
@@ -107,7 +122,7 @@ export default async function BlogIndexPage({ searchParams }: BlogPageProps) {
   const blogEnd = end + featuredBlogsCount;
 
   const [blogs, errBlogs] = await handleErrors(
-    fetchBlogIndexPageBlogs(blogStart, blogEnd)
+    fetchBlogIndexPageBlogs(blogStart, blogEnd, isDraftMode),
   );
 
   if (errBlogs || !blogs) {

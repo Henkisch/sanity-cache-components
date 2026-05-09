@@ -1,9 +1,10 @@
-import { sanityFetch } from "@workspace/sanity/live";
 import { queryAllBlogDataForSearch } from "@workspace/sanity/query";
 import Fuse from "fuse.js";
 import { NextResponse } from "next/server";
 
-export const revalidate = 300; // every 5 minutes
+import { sanityFetch } from "@/lib/sanity/fetch";
+
+export const revalidate = 300;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -13,9 +14,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Query is required" }, { status: 400 });
   }
 
-  const { data } = await sanityFetch({
+  const data = await sanityFetch({
     query: queryAllBlogDataForSearch,
-    stega: false,
+    tags: ["blog"],
   });
 
   if (!data) {

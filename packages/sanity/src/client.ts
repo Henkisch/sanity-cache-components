@@ -7,12 +7,8 @@ export const client = createClient({
   projectId: env.NEXT_PUBLIC_SANITY_PROJECT_ID,
   dataset: env.NEXT_PUBLIC_SANITY_DATASET,
   apiVersion: env.NEXT_PUBLIC_SANITY_API_VERSION,
-  useCdn: env.NODE_ENV === "production",
+  useCdn: false,
   perspective: "published",
-  stega: {
-    studioUrl: env.NEXT_PUBLIC_SANITY_STUDIO_URL,
-    enabled: env.NEXT_PUBLIC_VERCEL_ENV === "preview",
-  },
 });
 
 const imageBuilder = createImageUrlBuilder({

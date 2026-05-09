@@ -1,4 +1,3 @@
-import { sanityFetch } from "@workspace/sanity/live";
 import {
   queryFooterData,
   queryGlobalSeoSettings,
@@ -9,6 +8,7 @@ import type {
 } from "@workspace/sanity/types";
 import Link from "next/link";
 
+import { sanityFetch } from "@/lib/sanity/fetch";
 import { Logo } from "./logo";
 import {
   FacebookIcon,
@@ -28,19 +28,15 @@ type FooterProps = {
 };
 
 export async function FooterServer() {
-  const [response, settingsResponse] = await Promise.all([
-    sanityFetch({
-      query: queryFooterData,
-    }),
-    sanityFetch({
-      query: queryGlobalSeoSettings,
-    }),
+  const [footerData, settingsData] = await Promise.all([
+    sanityFetch({ query: queryFooterData, tags: ["footer"] }),
+    sanityFetch({ query: queryGlobalSeoSettings, tags: ["settings"] }),
   ]);
 
-  if (!(response?.data && settingsResponse?.data)) {
+  if (!(footerData && settingsData)) {
     return <FooterSkeleton />;
   }
-  return <Footer data={response.data} settingsData={settingsResponse.data} />;
+  return <Footer data={footerData} settingsData={settingsData} />;
 }
 
 function SocialLinks({ data }: SocialLinksProps) {
@@ -151,7 +147,6 @@ export function FooterSkeleton() {
 function Footer({ data, settingsData }: FooterProps) {
   const { subtitle, columns } = data;
   const { siteTitle, logo, socialLinks } = settingsData;
-  const year = new Date().getFullYear();
 
   return (
     <footer className="mt-20 pb-8">
@@ -205,9 +200,7 @@ function Footer({ data, settingsData }: FooterProps) {
           </div>
           <div className="mt-20 border-t pt-8">
             <div className="mx-auto flex max-w-7xl flex-col justify-between gap-4 px-4 text-center font-normal text-muted-foreground text-sm md:px-6 lg:flex-row lg:items-center lg:text-left">
-              <p>
-                © {year} {siteTitle}. All rights reserved.
-              </p>
+              <p>© {siteTitle}. All rights reserved.</p>
               <ul className="flex justify-center gap-4 lg:justify-start">
                 <li className="hover:text-primary">
                   <Link href="/terms">Terms and Conditions</Link>
