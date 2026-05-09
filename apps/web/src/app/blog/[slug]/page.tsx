@@ -73,8 +73,6 @@ export async function generateStaticParams() {
   return paths;
 }
 
-export const dynamicParams = true;
-
 export default async function BlogSlugPage({
   params,
 }: {
