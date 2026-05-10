@@ -20,8 +20,41 @@ const previewClient = createClient({
   },
 });
 
+const isProd = process.env.NODE_ENV === "production";
+
+/**
+ * Raw fetch — no "use cache", no tag propagation.
+ * Use this inside "use cache" components so their tags don't bleed into
+ * the parent cache scope. The component itself owns its own cacheTag() calls.
+ */
+export async function fetchSanity<const Q extends string>({
+  query,
+  params = {},
+}: {
+  query: Q;
+  params?: QueryParams;
+}): Promise<ClientReturn<Q>> {
+  return client.fetch<ClientReturn<Q>>(query, params, {
+    perspective: "published",
+    cache: "no-store",
+  });
+}
+
+/**
+ * Builds a deduplicated tag array from a document and explicit type tags.
+ * Adds doc:{_id} for the document itself and doc:{_ref} for every reference.
+ */
+export function buildCacheTags(data: unknown, explicitTags: string[]): string[] {
+  const tags = new Set<string>(explicitTags);
+  const asRecord = data as Record<string, unknown>;
+  if (typeof asRecord?._id === "string") tags.add(`doc:${asRecord._id}`);
+  for (const ref of extractRefs(data)) tags.add(ref);
+  return [...tags];
+}
+
 /**
  * Published content fetch — cached with Cache Components.
+ * Use in page components (not inside other "use cache" components).
  *
  * Tags applied automatically:
  * 1. Explicit type-level tags passed by caller e.g. ['page', 'blog']
@@ -38,9 +71,12 @@ export async function sanityFetch<const Q extends string>({
   tags?: string[];
 }): Promise<ClientReturn<Q>> {
   "use cache";
-  cacheLife("max");
+  cacheLife(isProd ? "max" : "seconds");
 
-  const data = await client.fetch<ClientReturn<Q>>(query, params);
+  const data = await client.fetch<ClientReturn<Q>>(query, params, {
+    perspective: "published",
+    cache: "no-store",
+  });
 
   const appliedTags: string[] = [...tags];
 
@@ -54,10 +90,6 @@ export async function sanityFetch<const Q extends string>({
 
   const uniqueTags = [...new Set(appliedTags)];
   if (uniqueTags.length) cacheTag(...uniqueTags);
-
-  console.log(
-    `[sanityFetch] tags=${JSON.stringify(uniqueTags)} refs=${refs.length} query=${query.slice(0, 60).replace(/\s+/g, " ")}...`,
-  );
 
   return data;
 }

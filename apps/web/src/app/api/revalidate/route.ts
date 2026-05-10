@@ -5,12 +5,6 @@ import { parseBody } from "next-sanity/webhook";
 
 const logger = new Logger("Revalidate");
 
-// Types that affect global navigation — bust everything
-const GLOBAL_TYPES = ["navbar", "footer", "settings"];
-
-// Types that should also bust the homepage when changed
-const HOME_FEED_TYPES = ["page"];
-
 export async function POST(request: NextRequest) {
   const { isValidSignature, body } = await parseBody(
     request,
@@ -27,28 +21,30 @@ export async function POST(request: NextRequest) {
 
   const { _id, _type } = body;
   const tags: string[] = [];
-  let reason: string;
 
-  if (GLOBAL_TYPES.includes(_type)) {
-    tags.push("global");
-    reason = `${_type} changed → bust global`;
-  } else {
-    tags.push(`doc:${_id}`);
-    reason = `${_type} changed → precise bust doc:${_id}`;
-  }
-
-  tags.push(_type);
-
-  if (HOME_FEED_TYPES.includes(_type)) {
-    tags.push("home");
-    reason += " + home";
+  switch (_type) {
+    case "settings":
+      // settings is used in navbar and footer — bust all three
+      tags.push("settings", "navbar", "footer");
+      break;
+    case "navbar":
+      tags.push("navbar", `doc:${_id}`);
+      break;
+    case "footer":
+      tags.push("footer", `doc:${_id}`);
+      break;
+    case "homePage":
+      tags.push("homePage", `doc:${_id}`);
+      break;
+    default:
+      tags.push(_type, `doc:${_id}`);
   }
 
   for (const tag of tags) {
     revalidateTag(tag, "max");
   }
 
-  logger.info(`${reason} | tags=${JSON.stringify(tags)}`);
+  logger.info(`${_type} changed | tags=${JSON.stringify(tags)}`);
 
   return NextResponse.json({ revalidated: true, tags });
 }

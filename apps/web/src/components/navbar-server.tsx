@@ -2,9 +2,9 @@ import {
   queryGlobalSeoSettings,
   queryNavbarData,
 } from "@workspace/sanity/query";
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 
-import { sanityFetch } from "@/lib/sanity/fetch";
+import { buildCacheTags, fetchSanity } from "@/lib/sanity/fetch";
 
 import { NavbarClient, NavbarSkeleton } from "./navbar-client";
 
@@ -12,12 +12,14 @@ export { NavbarSkeleton };
 
 export async function NavbarServer() {
   "use cache";
-  cacheLife("max");
+  cacheLife(process.env.NODE_ENV === "production" ? "max" : "seconds");
 
   const [navbarData, settingsData] = await Promise.all([
-    sanityFetch({ query: queryNavbarData, tags: ["navbar"] }),
-    sanityFetch({ query: queryGlobalSeoSettings, tags: ["settings"] }),
+    fetchSanity({ query: queryNavbarData }),
+    fetchSanity({ query: queryGlobalSeoSettings }),
   ]);
+
+  cacheTag(...buildCacheTags(navbarData, ["navbar"]));
 
   return <NavbarClient navbarData={navbarData} settingsData={settingsData} />;
 }

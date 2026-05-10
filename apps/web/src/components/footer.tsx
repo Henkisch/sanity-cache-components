@@ -6,10 +6,10 @@ import type {
   QueryFooterDataResult,
   QueryGlobalSeoSettingsResult,
 } from "@workspace/sanity/types";
+import { cacheLife, cacheTag } from "next/cache";
 import Link from "next/link";
-import { cacheLife } from "next/cache";
 
-import { sanityFetch } from "@/lib/sanity/fetch";
+import { buildCacheTags, fetchSanity } from "@/lib/sanity/fetch";
 import { Logo } from "./logo";
 import {
   FacebookIcon,
@@ -30,12 +30,14 @@ type FooterProps = {
 
 export async function FooterServer() {
   "use cache";
-  cacheLife("max");
+  cacheLife(process.env.NODE_ENV === "production" ? "max" : "seconds");
 
   const [footerData, settingsData] = await Promise.all([
-    sanityFetch({ query: queryFooterData, tags: ["footer"] }),
-    sanityFetch({ query: queryGlobalSeoSettings, tags: ["settings"] }),
+    fetchSanity({ query: queryFooterData }),
+    fetchSanity({ query: queryGlobalSeoSettings }),
   ]);
+
+  cacheTag(...buildCacheTags(footerData, ["footer"]));
 
   if (!(footerData && settingsData)) {
     return <FooterSkeleton />;
@@ -205,14 +207,6 @@ function Footer({ data, settingsData }: FooterProps) {
           <div className="mt-20 border-t pt-8">
             <div className="mx-auto flex max-w-7xl flex-col justify-between gap-4 px-4 text-center font-normal text-muted-foreground text-sm md:px-6 lg:flex-row lg:items-center lg:text-left">
               <p>© {siteTitle}. All rights reserved.</p>
-              <ul className="flex justify-center gap-4 lg:justify-start">
-                <li className="hover:text-primary">
-                  <Link href="/terms">Terms and Conditions</Link>
-                </li>
-                <li className="hover:text-primary">
-                  <Link href="/privacy">Privacy Policy</Link>
-                </li>
-              </ul>
             </div>
           </div>
         </div>

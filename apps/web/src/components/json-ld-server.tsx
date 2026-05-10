@@ -1,17 +1,16 @@
 import { querySettingsData } from "@workspace/sanity/query";
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 
-import { sanityFetch } from "@/lib/sanity/fetch";
+import { buildCacheTags, fetchSanity } from "@/lib/sanity/fetch";
 import { CombinedJsonLd } from "./json-ld";
 
 export async function JsonLdServer() {
   "use cache";
-  cacheLife("max");
+  cacheLife(process.env.NODE_ENV === "production" ? "max" : "seconds");
 
-  const settings = await sanityFetch({
-    query: querySettingsData,
-    tags: ["settings"],
-  });
+  const settings = await fetchSanity({ query: querySettingsData });
+
+  cacheTag(...buildCacheTags(settings, ["settings"]));
 
   return (
     <CombinedJsonLd includeOrganization includeWebsite settings={settings} />
