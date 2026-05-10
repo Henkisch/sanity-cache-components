@@ -49,7 +49,7 @@ export default async function RootLayout({
           <Suspense fallback={<NavbarSkeleton />}>
             <NavbarServer />
           </Suspense>
-          {children}
+          <Suspense>{children}</Suspense>
           <Suspense fallback={<FooterSkeleton />}>
             <FooterServer />
           </Suspense>
