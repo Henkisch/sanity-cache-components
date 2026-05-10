@@ -6,15 +6,11 @@ import { VisualEditing } from "next-sanity/visual-editing";
 import { Suspense } from "react";
 import { preconnect, prefetchDNS } from "react-dom";
 
-import { querySettingsData } from "@workspace/sanity/query";
-
 import { FooterServer, FooterSkeleton } from "@/components/footer";
-import { CombinedJsonLd } from "@/components/json-ld";
-import { Navbar } from "@/components/navbar";
+import { JsonLdServer } from "@/components/json-ld-server";
+import { NavbarServer, NavbarSkeleton } from "@/components/navbar-server";
 import { PreviewBar } from "@/components/preview-bar";
 import { Providers } from "@/components/providers";
-import { sanityFetch } from "@/lib/sanity/fetch";
-import { getNavigationData } from "@/lib/navigation";
 
 const fontSans = Geist({
   subsets: ["latin"],
@@ -44,26 +40,22 @@ export default async function RootLayout({
 }>) {
   preconnect("https://cdn.sanity.io");
   prefetchDNS("https://cdn.sanity.io");
-  const [nav, jsonLdSettings] = await Promise.all([
-    getNavigationData(),
-    sanityFetch({ query: querySettingsData, tags: ["settings"] }),
-  ]);
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased`}
       >
         <Providers>
-          <Navbar navbarData={nav.navbarData} settingsData={nav.settingsData} />
+          <Suspense fallback={<NavbarSkeleton />}>
+            <NavbarServer />
+          </Suspense>
           {children}
           <Suspense fallback={<FooterSkeleton />}>
             <FooterServer />
           </Suspense>
-          <CombinedJsonLd
-            includeOrganization
-            includeWebsite
-            settings={jsonLdSettings}
-          />
+          <Suspense>
+            <JsonLdServer />
+          </Suspense>
           <Suspense>
             <DraftModeUI />
           </Suspense>

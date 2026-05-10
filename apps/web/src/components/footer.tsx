@@ -7,6 +7,7 @@ import type {
   QueryGlobalSeoSettingsResult,
 } from "@workspace/sanity/types";
 import Link from "next/link";
+import { cacheLife } from "next/cache";
 
 import { sanityFetch } from "@/lib/sanity/fetch";
 import { Logo } from "./logo";
@@ -28,6 +29,9 @@ type FooterProps = {
 };
 
 export async function FooterServer() {
+  "use cache";
+  cacheLife("max");
+
   const [footerData, settingsData] = await Promise.all([
     sanityFetch({ query: queryFooterData, tags: ["footer"] }),
     sanityFetch({ query: queryGlobalSeoSettings, tags: ["settings"] }),

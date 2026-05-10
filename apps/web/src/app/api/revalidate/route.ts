@@ -9,12 +9,7 @@ const logger = new Logger("Revalidate");
 const GLOBAL_TYPES = ["navbar", "footer", "settings"];
 
 // Types that should also bust the homepage when changed
-const HOME_FEED_TYPES = ["blog", "page"];
-
-// Map _type to tag namespace if they differ from _type itself
-const TYPE_NAMESPACE: Record<string, string> = {
-  blogPost: "blog",
-};
+const HOME_FEED_TYPES = ["page"];
 
 export async function POST(request: NextRequest) {
   const { isValidSignature, body } = await parseBody(
@@ -31,7 +26,6 @@ export async function POST(request: NextRequest) {
   }
 
   const { _id, _type } = body;
-  const ns = TYPE_NAMESPACE[_type] ?? _type;
   const tags: string[] = [];
   let reason: string;
 
@@ -43,7 +37,7 @@ export async function POST(request: NextRequest) {
     reason = `${_type} changed → precise bust doc:${_id}`;
   }
 
-  tags.push(ns);
+  tags.push(_type);
 
   if (HOME_FEED_TYPES.includes(_type)) {
     tags.push("home");

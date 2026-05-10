@@ -52,10 +52,11 @@ export async function sanityFetch<const Q extends string>({
   const refs = [...extractRefs(data)];
   appliedTags.push(...refs);
 
-  if (appliedTags.length) cacheTag(...appliedTags);
+  const uniqueTags = [...new Set(appliedTags)];
+  if (uniqueTags.length) cacheTag(...uniqueTags);
 
   console.log(
-    `[sanityFetch] tags=${JSON.stringify(appliedTags)} refs=${refs.length} query=${query.slice(0, 60).replace(/\s+/g, " ")}...`,
+    `[sanityFetch] tags=${JSON.stringify(uniqueTags)} refs=${refs.length} query=${query.slice(0, 60).replace(/\s+/g, " ")}...`,
   );
 
   return data;
