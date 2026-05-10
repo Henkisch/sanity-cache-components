@@ -1,5 +1,6 @@
 import { queryHomePageData } from "@workspace/sanity/query";
 import { draftMode } from "next/headers";
+import { Suspense } from "react";
 
 import { PageBuilder } from "@/components/pagebuilder";
 import { sanityFetch, sanityFetchPreview } from "@/lib/sanity/fetch";
@@ -24,7 +25,7 @@ export async function generateMetadata() {
   });
 }
 
-export default async function Page() {
+async function HomePageContent() {
   const homePageData = await fetchHomePageData();
 
   if (!homePageData) {
@@ -34,4 +35,12 @@ export default async function Page() {
   const { _id, _type, pageBuilder } = homePageData;
 
   return <PageBuilder id={_id} pageBuilder={pageBuilder ?? []} type={_type} />;
+}
+
+export default function Page() {
+  return (
+    <Suspense>
+      <HomePageContent />
+    </Suspense>
+  );
 }

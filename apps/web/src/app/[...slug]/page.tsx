@@ -3,6 +3,7 @@ import { client } from "@workspace/sanity/client";
 import { querySlugPageData, querySlugPagePaths } from "@workspace/sanity/query";
 import { draftMode } from "next/headers";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 import { PageBuilder } from "@/components/pagebuilder";
 import { sanityFetch, sanityFetchPreview } from "@/lib/sanity/fetch";
@@ -68,7 +69,7 @@ export async function generateStaticParams() {
   return paths;
 }
 
-export default async function SlugPage({
+async function SlugPageContent({
   params,
 }: {
   params: Promise<{ slug: string[] }>;
@@ -93,5 +94,17 @@ export default async function SlugPage({
     </div>
   ) : (
     <PageBuilder id={_id} pageBuilder={pageBuilder} type={_type} />
+  );
+}
+
+export default function SlugPage({
+  params,
+}: {
+  params: Promise<{ slug: string[] }>;
+}) {
+  return (
+    <Suspense>
+      <SlugPageContent params={params} />
+    </Suspense>
   );
 }
