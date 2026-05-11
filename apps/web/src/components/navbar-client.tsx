@@ -3,18 +3,13 @@
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import useSWR from "swr";
 
 import type { ColumnLink, NavColumn, NavigationData } from "@/types";
-
 import { MenuLink } from "./elements/menu-link";
 import { SanityButtons } from "./elements/sanity-buttons";
 import { Logo } from "./logo";
 import { MobileMenu } from "./mobile-menu";
 import { ModeToggle } from "./mode-toggle";
-
-const fetcher = (url: string): Promise<NavigationData> =>
-  fetch(url).then((r) => r.json());
 
 function DesktopColumnDropdown({
   column,
@@ -92,23 +87,7 @@ export function NavbarSkeleton() {
   );
 }
 
-export function NavbarClient({
-  navbarData: initialNavbarData,
-  settingsData: initialSettingsData,
-}: NavigationData) {
-  const { data } = useSWR<NavigationData>("/api/navbar", fetcher, {
-    fallbackData: {
-      navbarData: initialNavbarData,
-      settingsData: initialSettingsData,
-    },
-    revalidateOnFocus: false,
-    revalidateOnMount: false,
-    refreshInterval: 30_000,
-    errorRetryCount: 3,
-  });
-
-  const navbarData = data?.navbarData ?? initialNavbarData;
-  const settingsData = data?.settingsData ?? initialSettingsData;
+export function NavbarClient({ navbarData, settingsData }: NavigationData) {
   const { columns, buttons } = navbarData || {};
   const { logo, siteTitle } = settingsData || {};
 
