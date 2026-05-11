@@ -28,16 +28,27 @@ type FooterProps = {
   settingsData: NonNullable<QueryGlobalSeoSettingsResult>;
 };
 
-export async function FooterServer() {
+async function getFooterData() {
   "use cache";
   cacheLife(process.env.NODE_ENV === "production" ? "max" : "seconds");
+  const data = await fetchSanity({ query: queryFooterData });
+  cacheTag(...buildCacheTags(data, ["footer"]));
+  return data;
+}
 
+async function getFooterSettingsData() {
+  "use cache";
+  cacheLife(process.env.NODE_ENV === "production" ? "max" : "seconds");
+  const data = await fetchSanity({ query: queryGlobalSeoSettings });
+  cacheTag(...buildCacheTags(data, ["settings"]));
+  return data;
+}
+
+export async function FooterServer() {
   const [footerData, settingsData] = await Promise.all([
-    fetchSanity({ query: queryFooterData }),
-    fetchSanity({ query: queryGlobalSeoSettings }),
+    getFooterData(),
+    getFooterSettingsData(),
   ]);
-
-  cacheTag(...buildCacheTags(footerData, ["footer"]));
 
   if (!(footerData && settingsData)) {
     return <FooterSkeleton />;
