@@ -15,11 +15,7 @@ async function fetchSlugPageData(slug: string, isDraftMode: boolean) {
   if (isDraftMode) {
     return sanityFetchPreview({ query: querySlugPageData, params: { slug } });
   }
-  return sanityFetch({
-    query: querySlugPageData,
-    params: { slug },
-    tags: ["page"],
-  });
+  return sanityFetch({ query: querySlugPageData, params: { slug } });
 }
 
 async function fetchSlugPagePaths() {

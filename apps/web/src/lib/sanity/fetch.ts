@@ -41,11 +41,11 @@ export async function fetchSanity<const Q extends string>({
 }
 
 /**
- * Builds a deduplicated tag array from a document and explicit type tags.
+ * Builds a deduplicated tag array from a document.
  * Adds doc:{_id} for the document itself and doc:{_ref} for every reference.
  */
-export function buildCacheTags(data: unknown, explicitTags: string[]): string[] {
-  const tags = new Set<string>(explicitTags);
+export function buildCacheTags(data: unknown): string[] {
+  const tags = new Set<string>();
   const asRecord = data as Record<string, unknown>;
   if (typeof asRecord?._id === "string") tags.add(`doc:${asRecord._id}`);
   for (const ref of extractRefs(data)) tags.add(ref);
@@ -54,21 +54,14 @@ export function buildCacheTags(data: unknown, explicitTags: string[]): string[] 
 
 /**
  * Published content fetch — cached with Cache Components.
- * Use in page components (not inside other "use cache" components).
- *
- * Tags applied automatically:
- * 1. Explicit type-level tags passed by caller e.g. ['page', 'blog']
- * 2. doc:{_id} for the returned document's own ID (single-document queries)
- * 3. doc:{_ref} for every reference found in the response
+ * Tags applied automatically: doc:{_id} and doc:{_ref} for every reference.
  */
 export async function sanityFetch<const Q extends string>({
   query,
   params = {},
-  tags = [],
 }: {
   query: Q;
   params?: QueryParams;
-  tags?: string[];
 }): Promise<ClientReturn<Q>> {
   "use cache";
   cacheLife(isProd ? "max" : "seconds");
@@ -78,18 +71,8 @@ export async function sanityFetch<const Q extends string>({
     cache: "no-store",
   });
 
-  const appliedTags: string[] = [...tags];
-
-  const asRecord = data as Record<string, unknown>;
-  if (typeof asRecord?._id === "string") {
-    appliedTags.push(`doc:${asRecord._id}`);
-  }
-
-  const refs = [...extractRefs(data)];
-  appliedTags.push(...refs);
-
-  const uniqueTags = [...new Set(appliedTags)];
-  if (uniqueTags.length) cacheTag(...uniqueTags);
+  const appliedTags = buildCacheTags(data);
+  if (appliedTags.length) cacheTag(...appliedTags);
 
   return data;
 }

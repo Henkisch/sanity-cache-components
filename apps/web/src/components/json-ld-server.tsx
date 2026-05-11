@@ -8,7 +8,7 @@ async function getJsonLdSettingsData() {
   "use cache";
   cacheLife(process.env.NODE_ENV === "production" ? "max" : "seconds");
   const data = await fetchSanity({ query: querySettingsData });
-  cacheTag(...buildCacheTags(data, ["settings"]));
+  cacheTag(...buildCacheTags(data));
   return data;
 }
 

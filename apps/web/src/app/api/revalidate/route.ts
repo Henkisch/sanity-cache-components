@@ -20,31 +20,11 @@ export async function POST(request: NextRequest) {
   }
 
   const { _id, _type } = body;
-  const tags: string[] = [];
+  const tag = `doc:${_id}`;
 
-  switch (_type) {
-    case "settings":
-      // settings is used in navbar and footer — bust all three
-      tags.push("settings", "navbar", "footer");
-      break;
-    case "navbar":
-      tags.push("navbar", `doc:${_id}`);
-      break;
-    case "footer":
-      tags.push("footer", `doc:${_id}`);
-      break;
-    case "homePage":
-      tags.push("homePage", `doc:${_id}`);
-      break;
-    default:
-      tags.push(_type, `doc:${_id}`);
-  }
+  revalidateTag(tag, "max");
 
-  for (const tag of tags) {
-    revalidateTag(tag, "max");
-  }
+  logger.info(`${_type} changed | tags=["${tag}"]`);
 
-  logger.info(`${_type} changed | tags=${JSON.stringify(tags)}`);
-
-  return NextResponse.json({ revalidated: true, tags });
+  return NextResponse.json({ revalidated: true, tags: [tag] });
 }

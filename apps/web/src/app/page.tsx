@@ -11,7 +11,7 @@ async function fetchHomePageData() {
   if (isDraftMode) {
     return sanityFetchPreview({ query: queryHomePageData });
   }
-  return sanityFetch({ query: queryHomePageData, tags: ["homePage"] });
+  return sanityFetch({ query: queryHomePageData });
 }
 
 export async function generateMetadata() {
