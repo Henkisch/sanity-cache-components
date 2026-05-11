@@ -9,7 +9,7 @@ import type {
 import { cacheLife, cacheTag } from "next/cache";
 import Link from "next/link";
 
-import { buildCacheTags, fetchSanity } from "@/lib/sanity/fetch";
+import { docTag, fetchSanity } from "@/lib/sanity/fetch";
 import { Logo } from "./logo";
 import {
   FacebookIcon,
@@ -37,10 +37,9 @@ export async function FooterServer() {
     fetchSanity({ query: queryGlobalSeoSettings }),
   ]);
 
-  const tags = [
-    ...buildCacheTags(footerData),
-    ...buildCacheTags(settingsData),
-  ];
+  const tags = [docTag(footerData), docTag(settingsData)].filter(
+    (t): t is string => t !== null
+  );
   if (tags.length) cacheTag(...tags);
 
   if (!(footerData && settingsData)) {

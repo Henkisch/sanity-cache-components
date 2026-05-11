@@ -4,7 +4,7 @@ import {
 } from "@workspace/sanity/query";
 import { cacheLife, cacheTag } from "next/cache";
 
-import { buildCacheTags, fetchSanity } from "@/lib/sanity/fetch";
+import { docTag, fetchSanity } from "@/lib/sanity/fetch";
 
 import { NavbarClient, NavbarSkeleton } from "./navbar-client";
 
@@ -19,10 +19,9 @@ export async function NavbarServer() {
     fetchSanity({ query: queryGlobalSeoSettings }),
   ]);
 
-  const tags = [
-    ...buildCacheTags(navbarData),
-    ...buildCacheTags(settingsData),
-  ];
+  const tags = [docTag(navbarData), docTag(settingsData)].filter(
+    (t): t is string => t !== null
+  );
   if (tags.length) cacheTag(...tags);
 
   return <NavbarClient navbarData={navbarData} settingsData={settingsData} />;

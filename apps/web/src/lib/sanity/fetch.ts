@@ -43,6 +43,7 @@ export async function fetchSanity<const Q extends string>({
 /**
  * Builds a deduplicated tag array from a document.
  * Adds doc:{_id} for the document itself and doc:{_ref} for every reference.
+ * Use for page content where embedded refs should cascade invalidation.
  */
 export function buildCacheTags(data: unknown): string[] {
   const tags = new Set<string>();
@@ -50,6 +51,17 @@ export function buildCacheTags(data: unknown): string[] {
   if (typeof asRecord?._id === "string") tags.add(`doc:${asRecord._id}`);
   for (const ref of extractRefs(data)) tags.add(ref);
   return [...tags];
+}
+
+/**
+ * Returns only the doc:{_id} tag for a document, without walking refs.
+ * Use for global layout components (navbar, footer, json-ld) where linked
+ * page refs shouldn't cascade invalidation into the layout cache.
+ */
+export function docTag(data: unknown): string | null {
+  const asRecord = data as Record<string, unknown>;
+  if (typeof asRecord?._id === "string") return `doc:${asRecord._id}`;
+  return null;
 }
 
 /**
@@ -67,7 +79,6 @@ export async function sanityFetch<const Q extends string>({
   cacheLife(isProd ? "max" : "seconds");
 
   const data = await client.fetch<ClientReturn<Q>>(query, params, {
-    perspective: "published",
     cache: "no-store",
   });
 
