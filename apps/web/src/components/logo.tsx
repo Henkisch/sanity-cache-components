@@ -20,8 +20,8 @@ export function Logo({
   src,
   alt = "logo",
   image,
-  width = 48,
-  height = 48,
+  width = 80,
+  height = 80,
   priority = true,
 }: LogoProps) {
   return (
@@ -30,8 +30,8 @@ export function Logo({
         <SanityImage
           alt={alt ?? "logo"}
           className="w-10!"
-          // width={width}
-          // height={height}
+          width={width}
+          height={height}
           decoding="sync"
           image={image}
           loading="eager"
