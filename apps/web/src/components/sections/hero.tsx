@@ -41,10 +41,10 @@ export function HeroBlock({
               <SanityImage
                 className="max-h-96 w-full rounded-3xl object-cover"
                 fetchPriority="high"
-                height={800}
+                height={600}
                 image={image}
                 loading="eager"
-                width={800}
+                width={600}
               />
             </div>
           )}
